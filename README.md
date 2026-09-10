@@ -20,7 +20,7 @@ flowchart LR
     User -->|View / Pause / Resume / Release| Extension
 ```
 
-The extension polls through its native handler. Website scripts cannot access the broker API. Pairing uses an expiring code; permanent native credentials stay outside webpage JavaScript. Only explicitly assigned tabs and their authorized origins are available to tools.
+The extension polls through its native handler. Website scripts cannot access the broker API. Pairing uses an expiring code; permanent native credentials stay outside webpage JavaScript. Only explicitly assigned tabs and their authorized origins are available to tools. Safari website permissions are hostname-scoped; the broker and extension separately enforce the assigned origin, including its port.
 
 ## Build
 

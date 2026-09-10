@@ -16,7 +16,7 @@ async function pause(tab,reason) {tab.paused=true;tab.reason=reason;await save()
 async function valid(tab,writing=false) {
   const current=await api.tabs.get(tab.tabId);
   if(!current.url||new URL(current.url).origin!==tab.origin) {await pause(tab,'origin_changed');throw new Error('Origin changed; release and assign this tab again.');}
-  if(!await api.permissions.contains({origins:[`${tab.origin}/*`]})){await pause(tab,'permission_required');throw new Error('Site access is required in Safari settings.');}
+  if(!await api.permissions.contains({origins:[permissionPattern(tab.origin)]})){await pause(tab,'permission_required');throw new Error('Site access is required in Safari settings.');}
   if(writing&&(tab.paused||current.active)){await pause(tab,tab.reason||'user_takeover');throw new Error('needs_user');}
   return current;
 }

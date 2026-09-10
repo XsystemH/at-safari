@@ -12,10 +12,11 @@ async function render(){
   }
 }
 $('pair').onclick=()=>act(()=>send({type:'pair',code:$('code').value}));
+$('code').onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();$('pair').click();}};
 $('assign').onclick=()=>act(async()=>{
   const [tab]=await browser.tabs.query({active:true,currentWindow:true});
   const url=new URL(tab.url);if(!['http:','https:'].includes(url.protocol))throw new Error('Open a normal HTTP(S) webpage first.');
-  const granted=await browser.permissions.request({origins:[`${url.origin}/*`]});
+  const granted=await browser.permissions.request({origins:[permissionPattern(url.origin)]});
   if(!granted)throw new Error('Safari site access was not granted.');
   await send({type:'assign',tabId:tab.id});
 });
