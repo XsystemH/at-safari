@@ -1,4 +1,4 @@
-"""Dependency-free scaffold checks; these are not runtime/protocol conformance tests."""
+"""Dependency-free JSON, plugin manifest and Markdown-link checks."""
 import json
 import re
 from pathlib import Path
@@ -21,16 +21,6 @@ if manifest.get('name') != 'at-safari':
 if manifest.get('mcpServers') != './.mcp.json':
     errors.append('Plugin must expose its companion MCP config')
 
-hello = documents.get('packages/protocol/fixtures/hello.json', {})
-result = documents.get('packages/protocol/fixtures/needs-user.json', {})
-if result.get('protocolVersion') not in hello.get('supportedProtocolVersions', []):
-    errors.append('Illustrative fixture protocol versions disagree')
-payload = result.get('payload', {})
-if payload.get('status') != 'needs_user' or not payload.get('handoffId'):
-    errors.append('Paused example must contain needs_user and a handoff handle')
-if payload.get('origin') != 'https://example.org':
-    errors.append('Illustrative fixture must use the synthetic example.org origin')
-
 for path in ROOT.rglob('*.md'):
     if any(p in path.relative_to(ROOT).parts for p in ('.git','node_modules','work','runtime')):
         continue
@@ -44,5 +34,5 @@ for path in ROOT.rglob('*.md'):
 
 if errors:
     raise SystemExit('\n'.join(errors))
-print(f'PASS: {len(documents)} JSON files, manifest, illustrative fixtures and local Markdown links')
+print(f'PASS: {len(documents)} JSON files, manifest and local Markdown links')
 print('Scope: static repository checks only; run the runtime suite and separate Safari integration checks.')

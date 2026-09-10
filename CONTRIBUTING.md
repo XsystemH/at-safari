@@ -1,8 +1,8 @@
 # Contributing
 
-The project is a local development alpha. Start with the [roadmap](docs/roadmap.md) and keep implementation claims tied to actual Safari evidence.
+The project is a local development alpha. Keep changes focused on the working page interaction flow and tie claims to actual Safari evidence.
 
-- Make protocol changes in the same PR as affected adapters and fixtures.
+- Make protocol changes in the same PR as both running components.
 - Keep browser behavior in the Safari backend and client-specific behavior in adapters.
 - Do not copy proprietary browser plugin sources or assets. Add attribution and license information for any third-party code you introduce.
 - Use synthetic pages and test accounts. Never commit browser profiles, cookies, tokens, signing certificates, screenshots of private pages, or full production DOM traces.

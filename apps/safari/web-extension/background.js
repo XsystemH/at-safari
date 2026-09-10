@@ -80,6 +80,7 @@ api.runtime.onMessage.addListener(async(message,sender)=>{
     if(message.type==='assign') {
       const current=await api.tabs.get(message.tabId),url=new URL(current.url);
       if(!['https:','http:'].includes(url.protocol))throw new Error('Only HTTP(S) pages can be assigned');
+      if(!current.active||url.origin!==message.expectedOrigin)throw new Error('The tab changed. Reopen this popup and allow it again.');
       for(const [h,t]of Object.entries(state.tabs))if(t.tabId===current.id)delete state.tabs[h];
       const handle=crypto.randomUUID();state.tabs[handle]={tabId:current.id,origin:url.origin,paused:false,reason:null};await save();void poll();return{ok:true};
     }

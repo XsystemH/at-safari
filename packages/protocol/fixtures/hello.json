@@ -1,7 +1,0 @@
-{
-  "component": "safari-extension",
-  "componentVersion": "0.1.0-dev",
-  "supportedProtocolVersions": ["0.1"],
-  "capabilities": [],
-  "connectionNonce": "fixture-only-not-a-credential"
-}

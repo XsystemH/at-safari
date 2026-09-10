@@ -10,7 +10,7 @@ Updated 2026-09-11. Tests do not imply universal website support.
 | macOS build | Xcode 26.6 build succeeded; ad-hoc app and embedded extension pass codesign verification | Developer ID signing, notarization, clean-machine installation |
 | Safari 26.4 | Extension enabled; real native pairing and polling confirmed; pairing retained across local app updates | Background execution awaits assignment of the local fixture |
 
-Automated suite currently contains 11 tests. Native input, background screenshots, and cross-origin frame support are intentionally absent.
+Automated suite currently contains 14 tests. Native input, background screenshots, and cross-origin frame support are intentionally absent.
 
 ## Reproduce the manual smoke test
 
@@ -20,7 +20,10 @@ The installation UI may reject automated extension-enabling clicks. Have the use
 
 ## Issues found during real Safari setup
 
-- Safari rejects permission match patterns containing a port. The shared permission helper now requests scheme + hostname; assignment and navigation continue checking the exact origin, including port. A regression test covers localhost and non-default HTTPS ports.
+- Safari rejects permission match patterns containing a port. The shared permission helper now requests scheme + hostname; assignment and action routing continue checking the exact origin, including port. A regression test covers localhost and non-default HTTPS ports.
 - The Safari converter lists resources explicitly. The generated project is now keyed by its resource file list, so added scripts are included.
 - Network-client entitlements must be enabled for each native target, not inferred from another target. The build now verifies the signed extension entitlement before reporting success.
 - Pairing can be submitted with Enter. Expired or consumed codes require a new `safari_pairing` call.
+
+- Safari loses the permission-request gesture across an awaited tab query. The popup now prepares its target before enabling the button, reuses existing grants, and requests missing permissions synchronously on click. Tests cover existing grants, new grants and denial.
+- Removed speculative protocol fixtures and duplicate planning documents. Retained inexpensive navigation, scroll and wait operations alongside core page interactions.

@@ -4,7 +4,7 @@ Operate explicitly assigned Safari tabs through MCP, using the website session a
 
 **Status: local development alpha (0.1.0-alpha.1).** A Safari Web Extension, Swift native handler, authenticated local broker, and seven callable MCP tools are implemented. The macOS app builds with Xcode. This is an ad-hoc development build, not a signed/notarized public release. See [validation](docs/validation.md) for actual test evidence and remaining gaps.
 
-[中文架构](docs/architecture.md) · [维护](docs/maintenance.md) · [Roadmap](docs/roadmap.md) · [Contributing](CONTRIBUTING.md)
+[中文架构](docs/architecture.md) · [维护](docs/maintenance.md) · [Contributing](CONTRIBUTING.md)
 
 This is an independent MIT-licensed project, unaffiliated with Apple or OpenAI. It does not add a native Safari tab picker to an agent application's composer or claim compatibility with proprietary browser SDKs.
 
@@ -93,6 +93,6 @@ Runtime credentials are stored under `~/Library/Application Support/at-safari` w
 
 ## Maintenance
 
-One repository, two delivery units: Safari app + embedded extension/native handler; JS broker + SDK + MCP + plugin. Protocol `0.1` is implemented as an exact-match alpha contract; the richer [protocol draft](packages/protocol/README.md) describes future work and is not the current wire schema.
+One repository, two delivery units: Safari app + embedded extension/native handler; JS broker + SDK + MCP + plugin. Internal version `0.1` is updated together on both sides. There is no separate protocol framework.
 
 Licensed under [MIT](LICENSE). Bundled dependency notices are generated alongside the plugin runtime during the build.
