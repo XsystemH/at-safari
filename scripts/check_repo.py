@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 errors = []
 documents = {}
 for path in ROOT.rglob('*.json'):
-    if any(p in path.parts for p in ('.git','node_modules','work','runtime')):
+    if any(p in path.relative_to(ROOT).parts for p in ('.git','node_modules','work','runtime')):
         continue
     try:
         documents[path.relative_to(ROOT).as_posix()] = json.loads(path.read_text())
@@ -32,7 +32,7 @@ if payload.get('origin') != 'https://example.org':
     errors.append('Illustrative fixture must use the synthetic example.org origin')
 
 for path in ROOT.rglob('*.md'):
-    if any(p in path.parts for p in ('.git','node_modules','work','runtime')):
+    if any(p in path.relative_to(ROOT).parts for p in ('.git','node_modules','work','runtime')):
         continue
     for target in re.findall(r'\[[^\]]*\]\(([^\s)]+)\)', path.read_text()):
         parsed = urlsplit(target)
