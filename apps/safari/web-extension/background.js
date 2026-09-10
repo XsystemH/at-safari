@@ -25,13 +25,14 @@ async function page(tab,message) {
   return api.tabs.sendMessage(tab.tabId,{channel:'at-safari',...message});
 }
 async function run(task) {
+  if(['tabs','open'].includes(task.op))return browserTask(task);
   const tab=state.tabs[task.handle];
   if(!tab)return {status:'not_started',reason:'tab_released'};
   const steps=[];
   try {
     if(Date.now()>task.deadline)return {status:'not_started',reason:'expired'};
     await valid(tab,task.op!=='snapshot');
-    if(task.op==='snapshot')return await page(tab,{op:'snapshot'});
+    if(task.op==='snapshot')return await page(tab,{op:'snapshot',match:task.args.match});
     if(task.op==='navigate') {
       if(new URL(task.args.url).origin!==tab.origin)throw new Error('Origin not authorized');
       await api.tabs.update(tab.tabId,{url:task.args.url});
@@ -49,6 +50,27 @@ async function run(task) {
     }
     return {status:'completed',steps};
   }catch(e){return{status:e.message==='needs_user'?'needs_user':'unknown',reason:tab.reason||e.message,steps,message:'Inspect the page before repeating any side effect.'};}
+}
+async function browserTask(task) {
+  let created=false;
+  try {
+    if(Date.now()>task.deadline)return{status:'not_started',reason:'expired'};
+    if(task.op==='tabs') {
+      const domain=String(task.args.domain).toLowerCase();
+      const tabs=(await api.tabs.query({})).filter(t=>{try{const u=new URL(t.url);return ['http:','https:'].includes(u.protocol)&&(u.hostname===domain||u.hostname.endsWith('.'+domain));}catch{return false;}});
+      return{status:'completed',tabs:tabs.map(t=>({id:t.id,title:t.title,url:t.url,active:t.active}))};
+    }
+    const url=new URL(task.args.url);
+    if(!['http:','https:'].includes(url.protocol))throw new Error('Only HTTP(S) pages can be opened');
+    if(!await api.permissions.contains({origins:[permissionPattern(url.origin)]}))return{status:'needs_user',reason:'permission_required',origin:url.origin};
+    const before=(await api.tabs.query({active:true,currentWindow:true}))[0];
+    if(Date.now()>task.deadline)return{status:'not_started',reason:'expired'};
+    const current=await api.tabs.create({url:url.href,active:false});created=true;
+    const handle=crypto.randomUUID();
+    state.tabs[handle]={tabId:current.id,origin:url.origin,paused:false,reason:null};await save();
+    const after=(await api.tabs.query({active:true,currentWindow:true}))[0];
+    return{status:'completed',tabHandle:`${state.clientId}:${handle}`,url:url.href,foregroundUnchanged:before?.id===after?.id};
+  }catch(error){return{status:created?'unknown':'not_started',reason:error.message};}
 }
 async function poll() {
   await loaded;if(busy||!state.paired)return;busy=true;

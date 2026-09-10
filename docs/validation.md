@@ -6,11 +6,11 @@ Updated 2026-09-11. Tests do not imply universal website support.
 | --- | --- | --- |
 | Broker | Real HTTP tests for pairing, Origin/auth isolation, deduplication, pause, navigation scope, timeout, late results and revocation | Long-running sleep/reconnect and multiple Safari profiles |
 | Page backend | jsdom tests for snapshot redaction, DOM events, stale references, visibility takeover, expiry and synthetic challenge detection | Real rich editors and production challenge providers |
-| MCP | Official MCP SDK client discovers all seven tools and invokes status/pairing through bundled stdio runtime | Other MCP hosts |
+| MCP | Official MCP SDK client discovers all nine tools and invokes status/pairing through bundled stdio runtime | Other MCP hosts |
 | macOS build | Xcode 26.6 build succeeded; ad-hoc app and embedded extension pass codesign verification | Developer ID signing, notarization, clean-machine installation |
-| Safari 26.4 | Extension enabled; real native pairing and polling confirmed; pairing retained across local app updates | Background execution awaits assignment of the local fixture |
+| Safari 26.4 | Extension enabled; real native pairing and polling confirmed; pairing retained across local app updates | Real Feishu background opening, signed-in snapshot and menu expansion verified; blank document creation did not succeed |
 
-Automated suite currently contains 14 tests. Native input, background screenshots, and cross-origin frame support are intentionally absent.
+Automated suite currently contains 18 tests. Native input, background screenshots, and cross-origin frame support are intentionally absent.
 
 ## Reproduce the manual smoke test
 
@@ -27,3 +27,9 @@ The installation UI may reject automated extension-enabling clicks. Have the use
 
 - Safari loses the permission-request gesture across an awaited tab query. The popup now prepares its target before enabling the button, reuses existing grants, and requests missing permissions synchronously on click. Tests cover existing grants, new grants and denial.
 - Removed speculative protocol fixtures and duplicate planning documents. Retained inexpensive navigation, scroll and wait operations alongside core page interactions.
+
+## Background Feishu trial
+
+The MCP client opened inactive tabs using existing Safari site permission; each open reported the same active tab before and after. Signed-in page reading, same-origin navigation and expansion of the New menu worked without native UI control. Clicking the Document item returned event-dispatch completion, but no new document tab or untitled document was observed after refreshing the task homepage. The exact cause is unresolved; do not count this as a successful creation test or claim general popup/editor support.
+
+Domain discovery and background opening reuse the existing broker queue and deduplication. Snapshots discover pointer-style custom controls and can filter controls by literal text before the element cap. Unit tests cover inactive tab creation without a permission prompt and filtered discovery beyond the cap.

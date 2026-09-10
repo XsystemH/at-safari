@@ -43,16 +43,21 @@ export class Broker {
   status() { return {version:VERSION,protocol:PROTOCOL,connected:[...this.clients.values()].filter(c=>Date.now()-(c.lastSeen||0)<10000).length,tabs:[...this.tabs.values()].map(t=>({...t,online:Date.now()-t.lastSeen<10000})),capabilities:['assigned-tabs','dom-snapshot','dom-actions','bounded-batch','manual-handoff'],limitations:['No trusted native input','No background screenshots','Writes require an inactive assigned tab','Top frame only']}; }
   async command(input) {
     const {requestId,tabHandle,op,args={}}=input;
+    const browserOp=['tabs','open'].includes(op);
     if(typeof requestId!=='string'||requestId.length>100) throw fail('requestId required');
-    const fingerprint=JSON.stringify({tabHandle,op,args});
+    const fingerprint=JSON.stringify({tabHandle,clientId:input.clientId,op,args});
     if(this.jobs.has(requestId)) {
       const job=this.jobs.get(requestId);
       if(job.fingerprint!==fingerprint) throw fail('requestId already used with different arguments',409);
       return job.result || job.promise;
     }
-    const tab=this.tabs.get(tabHandle);
+    const online=[...this.clients.values()].filter(c=>Date.now()-(c.lastSeen||0)<10000);
+    const client=browserOp?(input.clientId?online.find(c=>c.id===input.clientId):(online.length===1?online[0]:null)):null;
+    const tab=browserOp?(client?{clientId:client.id,lastSeen:client.lastSeen}:null):this.tabs.get(tabHandle);
     if(!tab || Date.now()-tab.lastSeen>10000) throw fail('Assigned tab is unavailable. Open the extension panel to reconnect.',409);
-    if(!['snapshot','execute','navigate'].includes(op)) throw fail('Unsupported operation');
+    if(!['snapshot','execute','navigate','tabs','open'].includes(op)) throw fail('Unsupported operation');
+    if(op==='tabs'&&(typeof args.domain!=='string'||!/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/i.test(args.domain)))throw fail('A hostname is required');
+    if(op==='open'){const u=new URL(args.url);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw fail('A normal HTTP(S) URL is required');}
     if(op!=='snapshot' && tab.paused) return {status:'needs_user',reason:tab.reason||'user_takeover',tabHandle};
     if(op==='execute') {
       if(!Array.isArray(args.steps)||args.steps.length<1||args.steps.length>10) throw fail('Use 1–10 steps');
@@ -61,7 +66,7 @@ export class Broker {
     if(op==='navigate') { let u;try{u=new URL(args.url);}catch{throw fail('Invalid URL');} if(u.origin!==tab.origin) throw fail('Navigation requires the assigned origin'); }
     this.expireJobs(); if(this.jobs.size>1000) throw fail('Too many recent requests',429);
     if([...this.jobs.values()].some(j=>j.tabHandle===tabHandle&&!j.result)) throw fail('This tab already has an outstanding request',409);
-    const job={requestId,tabHandle,op,args,clientId:tab.clientId,fingerprint,dispatched:false,deadline:Date.now()+this.timeoutMs};
+    const job={requestId,tabHandle,op,args,browserOp,clientId:tab.clientId,fingerprint,dispatched:false,deadline:Date.now()+this.timeoutMs};
     job.promise=new Promise(r=>job.resolve=r); this.jobs.set(requestId,job);
     job.timer=setTimeout(()=>this.finish(job,{status:job.dispatched?'unknown':'not_started',reason:'timeout',requestId}),this.timeoutMs);
     return job.promise;
@@ -104,10 +109,10 @@ export class Broker {
           for(const job of this.jobs.values()) {
             if(job.clientId!==client.id||job.result||job.dispatched)continue;
             const tab=this.tabs.get(job.tabHandle);
-            if(!tab){this.finish(job,{status:'not_started',reason:'tab_released'});continue;}
-            if(job.op!=='snapshot'&&tab.paused){this.finish(job,{status:'needs_user',reason:tab.reason||'user_takeover'});continue;}
+            if(!tab&&!job.browserOp){this.finish(job,{status:'not_started',reason:'tab_released'});continue;}
+            if(job.op!=='snapshot'&&tab?.paused){this.finish(job,{status:'needs_user',reason:tab.reason||'user_takeover'});continue;}
             job.dispatched=true;
-            task={requestId:job.requestId,handle:tab.localHandle,op:job.op,args:job.args,deadline:job.deadline};break;
+            task={requestId:job.requestId,handle:tab?.localHandle,op:job.op,args:job.args,deadline:job.deadline};break;
           }
           return send(200,{ok:true,task});
         }

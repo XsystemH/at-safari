@@ -15,7 +15,7 @@ test('actual MCP stdio discovery, status and pairing',async()=>{
   const client=new Client({name:'at-safari-test',version:'1.0.0'});
   try {
     await client.connect(transport);
-    const list=await client.listTools();assert.equal(list.tools.length,7);
+    const list=await client.listTools();assert.equal(list.tools.length,9);
     const status=await client.callTool({name:'safari_status',arguments:{}});assert.ok(!status.isError);assert.equal(JSON.parse(status.content[0].text).connected,0);
     const pair=await client.callTool({name:'safari_pairing',arguments:{}});assert.match(JSON.parse(pair.content[0].text).code,/^[A-F0-9]{12}$/);
     const bad=await client.callTool({name:'safari_snapshot',arguments:{tabHandle:'not-authorized'}});assert.equal(bad.isError,true);

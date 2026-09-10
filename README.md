@@ -2,7 +2,7 @@
 
 Operate explicitly assigned Safari tabs through MCP, using the website session already in Safari. The task remains a real, visible Safari tab; selecting it pauses agent writes.
 
-**Status: local development alpha (0.1.0-alpha.1).** A Safari Web Extension, Swift native handler, authenticated local broker, and seven callable MCP tools are implemented. The macOS app builds with Xcode. This is an ad-hoc development build, not a signed/notarized public release. See [validation](docs/validation.md) for actual test evidence and remaining gaps.
+**Status: local development alpha (0.1.0-alpha.1).** A Safari Web Extension, Swift native handler, authenticated local broker, and nine callable MCP tools are implemented. The macOS app builds with Xcode. This is an ad-hoc development build, not a signed/notarized public release. See [validation](docs/validation.md) for actual test evidence and remaining gaps.
 
 [中文架构](docs/architecture.md) · [维护](docs/maintenance.md) · [Contributing](CONTRIBUTING.md)
 
@@ -20,7 +20,7 @@ flowchart LR
     User -->|View / Pause / Resume / Release| Extension
 ```
 
-The extension polls through its native handler. Website scripts cannot access the broker API. Pairing uses an expiring code; permanent native credentials stay outside webpage JavaScript. Only explicitly assigned tabs and their authorized origins are available to tools. Safari website permissions are hostname-scoped; the broker and extension separately enforce the assigned origin, including its port.
+The extension polls through its native handler. Website scripts cannot access the broker API. Pairing uses an expiring code; permanent native credentials stay outside webpage JavaScript. Page actions use assigned tabs and their authorized origins. Domain-filtered discovery returns matching tab metadata; background opening creates and assigns a new inactive tab using existing site permission. Safari website permissions are hostname-scoped; the broker and extension separately enforce the assigned origin, including its port.
 
 ## Build
 
@@ -55,7 +55,7 @@ Build first, then configure any local stdio MCP host with this entry, replacing 
 The launcher needs Node 22+ on PATH, in a standard Homebrew location, or through `AT_SAFARI_NODE`. The broker starts on demand at `127.0.0.1:19848`. A Codex plugin package is in `plugins/at-safari`; build it before installing via a local marketplace. A fresh Codex task is required to pick up newly installed plugin tools.
 
 1. Call `safari_pairing`. Enter its five-minute code in the **extension popup**, never a webpage.
-2. Open the task's Safari tab. Click **Allow agent on this tab** and grant access to that specific website.
+2. For a new task tab on an already permitted website, use `safari_open`; it opens in the background and returns a handle. Otherwise open the site, click **Allow agent on this tab** and grant access to that website.
 3. Switch to another tab. The agent can now read a snapshot and send bounded DOM actions.
 4. To inspect or take over, select the task tab or click **View**. Use **Resume** in the popup and switch away again to continue. **Release** removes the assignment; `safari_revoke` removes the paired client.
 
@@ -67,7 +67,9 @@ A local test page is available at `http://127.0.0.1:19848/demo` while the broker
 | --- | --- |
 | `safari_status` | Connection, assigned tab handles, pause state and limitations |
 | `safari_pairing` | Create a short-lived native pairing code |
-| `safari_snapshot` | Bounded top-frame text and fresh element references |
+| `safari_tabs` | Discover tab metadata for a requested domain and its subdomains |
+| `safari_open` | Open and assign an inactive tab using existing site permission |
+| `safari_snapshot` | Bounded top-frame text and fresh element references; optional literal `match` filters controls |
 | `safari_execute` | 1–10 click, fill, select, scroll or wait operations |
 | `safari_navigate` | Navigate within the assigned origin |
 | `safari_result` | Inspect a request, including a late result after timeout |
@@ -85,7 +87,7 @@ Actions require references from a fresh snapshot and an explicit unique request 
 
 ## Limits and human verification
 
-This alpha uses DOM events, which are not native trusted input. Complex editors, file dialogs, passkeys, screenshots, cross-origin frames, and arbitrary JavaScript execution are unsupported. Existing Safari session state is reused by operating the real page; the bridge does not copy Cookies or promise that every site will avoid login prompts or CAPTCHAs.
+This alpha uses DOM events, which are not native trusted input. A completed click confirms event dispatch, not website success. Real Feishu testing confirmed background access with the existing login and menu expansion, but did not produce a verified new document. Popup-dependent actions remain unverified. Complex editors, file dialogs, passkeys, screenshots, cross-origin frames, and arbitrary JavaScript execution are unsupported. Existing Safari session state is reused by operating the real page; the bridge does not copy Cookies or promise that every site will avoid login prompts or CAPTCHAs.
 
 Visible challenge signals pause mutations and return `needs_user`. The user completes verification in the original tab and explicitly resumes. Detection is heuristic and cannot identify every challenge. No automatic CAPTCHA solving, verification-token export, or repeated submission is provided. An already-dispatched action cannot be atomically undone when the user takes over.
 

@@ -35,3 +35,14 @@ test('queued timeout is not-started and revoked clients lose access',async t=>{
   const{post,ext,handle}=await setup(t,30);assert.equal((await post('/command',{requestId:'queued',tabHandle:handle,op:'snapshot'})).data.status,'not_started');
   await post('/revoke',{clientId:'test-extension-instance'});assert.equal((await ext('poll',{tabs:[]})).code,401);
 });
+test('browser commands work before tab assignment and opening is deduplicated',async t=>{
+  const{post,ext}=await setup(t);await ext('poll',{tabs:[]});
+  const body={requestId:'open-once',op:'open',args:{url:'https://example.org/'}};
+  const pending=post('/command',body);await new Promise(r=>setTimeout(r,10));
+  const dispatch=(await ext('poll',{tabs:[]})).data.task;
+  assert.equal(dispatch.op,'open');
+  await ext('result',{requestId:body.requestId,result:{status:'completed',tabHandle:'new'}});
+  assert.equal((await pending).data.tabHandle,'new');
+  assert.equal((await post('/command',body)).data.tabHandle,'new');
+  assert.equal((await ext('poll',{tabs:[]})).data.task,null);
+});

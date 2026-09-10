@@ -31,3 +31,23 @@ test('visible challenge pauses; a expired deadline does not click',async()=>{
   f.w.document.querySelector('h1').innerText='Verify you are human';assert.equal((await f.call({op:'snapshot'})).reason,'challenge');
   }finally{f.close();}
 });
+test('custom pointer controls and menu items are discoverable and clickable',async()=>{
+  const f=fixture();try{
+    const custom=f.w.document.createElement('div');custom.style.cursor='pointer';custom.innerText='New document';f.w.document.body.prepend(custom);
+    let clicked=0;custom.onclick=()=>clicked++;
+    const snap=await f.call({op:'snapshot'});const target=snap.elements.find(e=>e.name==='New document');assert.ok(target);
+    assert.equal((await f.call({op:'action',deadline:Date.now()+1000,step:{action:'click',ref:target.ref}})).status,'completed');assert.equal(clicked,1);
+  }finally{f.close();}
+});
+
+test('match finds a late menu item beyond the control cap and click emits its mouse sequence',async()=>{
+  const f=fixture();try{
+    for(let i=0;i<130;i++){const b=f.w.document.createElement('button');b.innerText='Other';f.w.document.body.append(b);}
+    const item=f.w.document.createElement('li');item.setAttribute('role','menuitem');item.innerText='Document';f.w.document.body.append(item);
+    assert.ok(!(await f.call({op:'snapshot'})).elements.some(e=>e.name==='Document'));
+    const filtered=await f.call({op:'snapshot',match:'Document'});assert.equal(filtered.elements.length,1);
+    const events=[];for(const type of ['mouseover','mouseenter','mousedown','mouseup','click'])item.addEventListener(type,()=>events.push(type));
+    await f.call({op:'action',deadline:Date.now()+1000,step:{action:'click',ref:filtered.elements[0].ref}});
+    assert.deepEqual(events,['mouseover','mouseenter','mousedown','mouseup','click']);
+  }finally{f.close();}
+});
