@@ -1,6 +1,6 @@
 # Contributing
 
-The project is in its design phase. Start with the [roadmap](docs/roadmap.md) and keep implementation claims tied to actual Safari evidence.
+The project is a local development alpha. Start with the [roadmap](docs/roadmap.md) and keep implementation claims tied to actual Safari evidence.
 
 - Make protocol changes in the same PR as affected adapters and fixtures.
 - Keep browser behavior in the Safari backend and client-specific behavior in adapters.
@@ -9,6 +9,6 @@ The project is in its design phase. Start with the [roadmap](docs/roadmap.md) an
 - Document tested macOS/Safari and component versions, background focus behavior and human-handoff behavior for runtime changes.
 - Keep signing and distribution changes separate from ordinary build changes.
 
-Run `python3 scripts/check_repo.py` before a PR. This is scaffold validation only. Add meaningful protocol/Safari tests as those components are implemented.
+Run `pnpm build`, `pnpm check`, `pnpm test` and `python3 scripts/check_repo.py` before a PR. Linux tests validate the broker, DOM fixtures and actual MCP transport; Safari regressions require a Mac and a separate manual evidence record.
 
-No dependency manager, runtime SDK version, IPC implementation or release pipeline has been selected yet. Propose these with a small working experiment and an architecture decision record.
+Use pnpm and the committed lockfile. The current transport is Swift native messaging plus authenticated loopback HTTP. Keep the JavaScript runtime and native handler protocol compatible in a single PR. Generated Xcode projects, app binaries and bundled runtime files stay outside Git.

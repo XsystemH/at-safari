@@ -1,0 +1,24 @@
+{
+  "name": "at-safari",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "mcp": "node packages/mcp/main.mjs",
+    "bridge": "node packages/mcp/main.mjs --broker",
+    "check": "node scripts/check-js.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "jsdom": "30.0.1"
+  }
+}

@@ -4,7 +4,7 @@
 
 选择「Safari Web Extension + Swift 原生桥接 + 本地服务 + SDK/MCP」，目标是使用现有登录状态，在指定后台标签页执行任务。采用单仓库，便于一次 PR 同时修改协议两端。
 
-这是待验证的工程方案，不是已成熟的产品。已确认本地 Safari 26.4、Xcode 26.6 可用；Safari 自带的 MCP 参数不可用。此前独立内置浏览器的测试不能证明 Safari 扩展后台执行可行。
+目前已实现本地开发 alpha：Web Extension、Swift native handler、loopback broker、JS SDK 和七个 MCP 工具。Xcode 26.6 已构建成功；自动化测试覆盖 broker、DOM backend 和实际 MCP stdio。Safari 实机验收单列在 [验证记录](validation.md)，不能用内置浏览器或 jsdom 测试替代。以下未标明已实现的高级能力仍是设计目标。
 
 公开资料支持 Safari 扩展脚本注入及与原生组件通信。后台标签页的输入、复杂编辑器、截图和休眠恢复仍需实机验证。Chrome 的 CDP 输入与可访问性接口不能直接移植到 Safari。
 
@@ -21,13 +21,13 @@
 3. **SDK / MCP**：SDK 封装底层请求，MCP 转换工具参数、结果与错误；不重复实现 DOM 逻辑，不持有 Safari Cookies。
 4. **共享协议**：定义版本协商、能力声明、消息封装和状态。MCP 版本与内部桥接协议版本分开。
 
-## Safari 原生通信必须先做 spike
+## 已选择的 alpha 通信路径
 
-Safari 原生消息进入 app extension handler，不能假定它与 Chrome 启动任意 stdio native host 的方式相同。需要实测 extension → handler → app/bridge 的请求、响应及应用到扩展的通知路径。
+Web Extension 使用 `browser.runtime.sendNativeMessage` 调用 Swift app extension handler；handler 通过 ephemeral URLSession 访问固定的 `127.0.0.1:19848`，仅允许配对、轮询和结果提交。JS broker 由 MCP 入口按需启动。这里没有 Chrome 式任意 stdio native host，也不依赖 app 向后台页主动推送。
 
-候选方式是 Swift app 承载桥接，使用受限 App Group / 本地 IPC 连接 JS 服务。具体 IPC 和进程保活方式待实测后通过 ADR 固定；现阶段不宣称双向常驻通道已经成立。不能为保持连接而假定 Safari 的扩展后台脚本永久运行。
+macOS Manifest V2 persistent background 每秒轮询一次，每次最多接收一个任务。Safari/机器休眠会使轮询中断；超过十秒未收到状态视为离线，截止时间后不再分派，已分派超时则保留 `unknown`。重连重新载入的任务先暂停，要求用户 Resume。长期休眠和 Profile 切换仍需实机回归。
 
-默认不监听公网端口。若采用 loopback HTTP/WebSocket，必须验证配对、Origin、请求大小及重放；若采用 Unix socket，必须限制目录和 socket 权限，并保持会话认证。网站脚本不得通过伪造消息启动本地任务。
+broker 仅绑定 loopback，拒绝带 Origin 的请求，检查 Host、独立 bearer 凭据、请求大小、配对有效期和次数；原生长期凭据保存在 extension sandbox，不返回给 popup JavaScript。当前内部协议为精确匹配 `0.1`，更完整的协议草案、生成类型、租约及取消尚未实现。
 
 ## 登录状态与并行操作
 

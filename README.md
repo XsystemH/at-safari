@@ -1,73 +1,98 @@
 # at-safari
 
-Safari automation for agents, designed around your existing signed-in tabs and uninterrupted browsing.
+Operate explicitly assigned Safari tabs through MCP, using the website session already in Safari. The task remains a real, visible Safari tab; selecting it pauses agent writes.
 
-**Status: architecture and repository scaffold. No working Safari extension, native bridge, MCP server, or installable release exists yet.** Background execution, human handoff, and Safari compatibility must pass the feasibility gates below before a usable release is advertised.
+**Status: local development alpha (0.1.0-alpha.1).** A Safari Web Extension, Swift native handler, authenticated local broker, and seven callable MCP tools are implemented. The macOS app builds with Xcode. This is an ad-hoc development build, not a signed/notarized public release. See [validation](docs/validation.md) for actual test evidence and remaining gaps.
 
-[中文设计与维护说明](docs/architecture.md) · [Roadmap](docs/roadmap.md) · [Protocol draft](packages/protocol/README.md) · [Contributing](CONTRIBUTING.md)
+[中文架构](docs/architecture.md) · [维护](docs/maintenance.md) · [Roadmap](docs/roadmap.md) · [Contributing](CONTRIBUTING.md)
 
-## Intent
+This is an independent MIT-licensed project, unaffiliated with Apple or OpenAI. It does not add a native Safari tab picker to an agent application's composer or claim compatibility with proprietary browser SDKs.
 
-Let a person browse Safari tab A while an agent works on an explicitly assigned tab B in the same Safari profile. Reuse the website session already present in Safari. Provide a composable client with tab handles, semantic locators, snapshots, bounded batches, and conditions to wait for.
-
-The design takes inspiration from the organization of browser-agent interfaces. This repository contains an independent implementation plan, not copied proprietary browser automation code. It is not affiliated with Apple or OpenAI. `at-safari` is the project name; a native `@Safari` picker in an agent application's composer is not an implemented feature.
-
-## Proposed architecture
+## Architecture
 
 ```mermaid
 flowchart LR
-    Agent[Agent client] --> MCP[MCP adapter]
-    MCP --> SDK[TypeScript SDK]
-    SDK --> Core[Local session coordinator]
-    Core <--> Native[macOS native bridge]
-    Native <--> Ext[Safari Web Extension]
-    Ext --> Tab[Assigned Safari tab]
-    Human[User] --> Handoff[Pause / take over / resume]
-    Handoff --> Ext
+    Agent -->|stdio| MCP[MCP / JS SDK]
+    MCP --> Broker[Authenticated loopback broker]
+    Extension[Safari extension] -->|nativeMessaging| Swift[Swift handler]
+    Swift -->|poll / result| Broker
+    Extension --> Tab[Assigned background tab]
+    User -->|View / Pause / Resume / Release| Extension
 ```
 
-MCP is an integration surface, not the internal browser wire protocol. Session and request handles are explicit, so the design does not depend on one agent client's persistent JavaScript runtime.
+The extension polls through its native handler. Website scripts cannot access the broker API. Pairing uses an expiring code; permanent native credentials stay outside webpage JavaScript. Only explicitly assigned tabs and their authorized origins are available to tools.
 
-## Repository layout
+## Build
 
-| Path | Responsibility | Current contents |
-| --- | --- | --- |
-| `apps/safari/` | Web Extension, Swift container, native handler, user controls | Component design |
-| `packages/bridge/` | Local session coordinator and authenticated IPC | Component design |
-| `packages/protocol/` | Shared wire contract, capabilities and version negotiation | Draft specification and illustrative messages |
-| `packages/sdk/` | Composable browser interface | Component design |
-| `packages/mcp/` | MCP tools and client-facing errors | Component design |
-| `plugins/at-safari/` | Optional Codex packaging | Inactive metadata scaffold only |
-| `docs/` | Architecture, maintenance, validation gates | Design documents |
-
-## First feasibility gates
-
-1. Connect a real Safari extension to the local bridge, including background suspension and reconnection.
-2. Read an assigned, signed-in tab without activating it.
-3. Fill and click in tab B while the user types in tab A; record any tab switch, keyboard interference, or system dialog.
-4. Pause a batch for a human challenge, let the user take over the same tab, and revalidate before resuming without replaying a submission.
-5. Validate ordinary forms and at least one complex editor separately. A simple form success does not establish universal input support.
-
-The currently inspected Safari 26.4 installation lacks Apple's `safaridriver --mcp` option. This project proposes a Safari extension backend; it does not require that option. No Safari backend has been tested in this repository.
-
-## Human verification
-
-Existing login state does not guarantee fewer challenges. We do not promise automatic CAPTCHA completion or challenge-free operation. The proposed product behavior is to stop mutations, return a structured `needs_user` outcome, keep the assigned tab available, and resume only after an explicit handoff completion and fresh page checks. Failed or ambiguous submissions must not be retried automatically.
-
-Synthetic challenges and vendor test keys belong in automated tests. Production challenge behavior requires consented manual observations and must be reported independently of fixture results.
-
-## Check this scaffold
-
-Python 3.10+ and Git are sufficient for the current repository:
+Requirements: Node 22+, pnpm, Python 3, macOS with full Xcode for the Safari app. Tested locally with Node 24 and Xcode 26.6.
 
 ```sh
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm build
+pnpm check
+pnpm test
 python3 scripts/check_repo.py
+python3 scripts/build-safari.py
 ```
 
-This checks repository metadata, JSON syntax, fixture envelope consistency, and local Markdown links. It does **not** validate a browser implementation or prove that the proposed protocol works. Runtime build instructions will be added with working components.
+The app is generated at `work/DerivedData/Build/Products/Debug/At Safari.app`. Copy it into your Applications folder and open it. For this local ad-hoc build, enable Safari Settings → Developer → Allow unsigned extensions (macOS may require your authentication), then enable **at-safari** in Extensions. Safari may require this development setting again after restarting. Never disable unrelated browser security settings.
 
-## Release intent
+## Connect an MCP client
 
-Use one repository and PRs that can update both sides of the contract. Distribute the Safari extension and native app together; version the JS tooling separately. Publish a tested compatibility matrix with every supported combination. See [maintenance](docs/maintenance.md).
+Build first, then configure any local stdio MCP host with this entry, replacing the absolute repository path:
 
-Licensed under [MIT](LICENSE).
+```json
+{
+  "mcpServers": {
+    "at-safari": {
+      "command": "/bin/bash",
+      "args": ["/absolute/path/at-safari/plugins/at-safari/scripts/run-mcp.sh"]
+    }
+  }
+}
+```
+
+The launcher needs Node 22+ on PATH, in a standard Homebrew location, or through `AT_SAFARI_NODE`. The broker starts on demand at `127.0.0.1:19848`. A Codex plugin package is in `plugins/at-safari`; build it before installing via a local marketplace. A fresh Codex task is required to pick up newly installed plugin tools.
+
+1. Call `safari_pairing`. Enter its five-minute code in the **extension popup**, never a webpage.
+2. Open the task's Safari tab. Click **Allow agent on this tab** and grant access to that specific website.
+3. Switch to another tab. The agent can now read a snapshot and send bounded DOM actions.
+4. To inspect or take over, select the task tab or click **View**. Use **Resume** in the popup and switch away again to continue. **Release** removes the assignment; `safari_revoke` removes the paired client.
+
+A local test page is available at `http://127.0.0.1:19848/demo` while the broker is running. It only updates a counter and text inside the page.
+
+## Tools
+
+| Tool | Purpose |
+| --- | --- |
+| `safari_status` | Connection, assigned tab handles, pause state and limitations |
+| `safari_pairing` | Create a short-lived native pairing code |
+| `safari_snapshot` | Bounded top-frame text and fresh element references |
+| `safari_execute` | 1–10 click, fill, select, scroll or wait operations |
+| `safari_navigate` | Navigate within the assigned origin |
+| `safari_result` | Inspect a request, including a late result after timeout |
+| `safari_revoke` | Revoke a paired extension instance |
+
+Diagnostic invocation through the actual MCP SDK:
+
+```sh
+node scripts/call-tool.mjs safari_status
+node scripts/call-tool.mjs safari_pairing
+node scripts/call-tool.mjs safari_snapshot '{"tabHandle":"handle-from-status"}'
+```
+
+Actions require references from a fresh snapshot and an explicit unique request ID. After a timeout marked `unknown`, inspect the original result and page; do not replay a submission with a new ID. Deduplication is in memory for ten minutes and does not survive broker restart.
+
+## Limits and human verification
+
+This alpha uses DOM events, which are not native trusted input. Complex editors, file dialogs, passkeys, screenshots, cross-origin frames, and arbitrary JavaScript execution are unsupported. Existing Safari session state is reused by operating the real page; the bridge does not copy Cookies or promise that every site will avoid login prompts or CAPTCHAs.
+
+Visible challenge signals pause mutations and return `needs_user`. The user completes verification in the original tab and explicitly resumes. Detection is heuristic and cannot identify every challenge. No automatic CAPTCHA solving, verification-token export, or repeated submission is provided. An already-dispatched action cannot be atomically undone when the user takes over.
+
+Runtime credentials are stored under `~/Library/Application Support/at-safari` with restricted permissions. DOM snapshots and job results are held in memory. Treat returned page content as untrusted and potentially sensitive. Same-user local processes are inside the local trust boundary.
+
+## Maintenance
+
+One repository, two delivery units: Safari app + embedded extension/native handler; JS broker + SDK + MCP + plugin. Protocol `0.1` is implemented as an exact-match alpha contract; the richer [protocol draft](packages/protocol/README.md) describes future work and is not the current wire schema.
+
+Licensed under [MIT](LICENSE). Bundled dependency notices are generated alongside the plugin runtime during the build.

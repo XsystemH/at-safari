@@ -1,17 +1,21 @@
 {
   "name": "at-safari",
-  "version": "0.1.0-dev",
-  "description": "Design-stage packaging for at-safari. No browser tools are implemented yet.",
+  "version": "0.1.0-alpha.1",
+  "description": "Operate explicitly assigned Safari tabs through a local MCP bridge with human handoff.",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "repository": "https://github.com/XsystemH/at-safari",
   "author": {
     "name": "at-safari contributors"
   },
   "interface": {
     "displayName": "at-safari",
-    "shortDescription": "Safari agent bridge — design scaffold.",
-    "longDescription": "Independent Safari agent bridge design. This metadata scaffold does not expose working tools.",
+    "shortDescription": "Use assigned Safari tabs in the background.",
+    "longDescription": "Connect the at-safari Safari extension to local MCP tools. Reuse signed-in tabs, read pages, perform bounded DOM actions, and pause for human takeover. Requires the companion macOS app. Alpha: no screenshots or trusted native input.",
     "developerName": "at-safari contributors",
     "category": "Productivity",
-    "capabilities": [],
-    "defaultPrompt": "Explain the current at-safari design and implementation status."
+    "capabilities": ["Read", "Interactive", "Write"],
+    "defaultPrompt": "Connect at-safari and show the Safari tabs I have assigned."
   }
 }

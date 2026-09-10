@@ -1,8 +1,8 @@
 # Roadmap and release gates
 
-## P0 — Establish feasibility (not started)
+## P0 — Establish feasibility (in progress)
 
-- [ ] Build the minimal Safari container and extension; document signing and installation prerequisites.
+- [x] Build the minimal Safari container and extension; document local ad-hoc signing and installation prerequisites.
 - [ ] Prove native request/response and app-to-extension notification behavior; choose IPC in an ADR.
 - [ ] Read an explicitly assigned signed-in tab without activation.
 - [ ] Fill a normal form and click in background tab B while a user types in tab A.
@@ -16,9 +16,9 @@
 
 - [ ] Finalize protocol schema and generated TS/Swift types from one source.
 - [ ] Implement version and capability negotiation, authenticated local pairing and revocation.
-- [ ] Implement assigned-tab leases and per-request deduplication.
+- [x] Implement explicit assignments and in-memory request deduplication; durable leases remain future work.
 - [ ] Stop a batch for human intervention, return promptly, explicitly resume after fresh checks.
-- [ ] Test lost responses after a side effect; never replay an ambiguous submission automatically.
+- [x] Test dispatched timeouts and late results; preserve ambiguous outcomes without automatic replay.
 - [ ] Use self-hosted synthetic challenges and vendor test keys for deterministic tests.
 
 **Exit:** handoff preserves the page, never automatically switches focus, and never duplicates a completed submission. Unknown results remain visible to the caller.
@@ -26,8 +26,8 @@
 ## P2 — Useful private alpha
 
 - [ ] SDK: tabs, snapshot, semantic locators, bounded action batches, waits and cancellation.
-- [ ] MCP: status, assigned tabs, snapshot, execute, handoff state, explicit resume.
-- [ ] Website permissions UI, local connection UI and user-visible task activity.
+- [x] MCP: status, assigned tabs, snapshot, execute, results, revocation; resume is human-only in the popup.
+- [x] Website permission requests, pairing UI and user-visible assigned-tab pause controls.
 - [ ] Validate two or three user-selected websites; report challenge frequency and manual effort.
 - [ ] Complete logs redaction and compatibility matrix.
 

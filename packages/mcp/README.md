@@ -1,7 +1,7 @@
 # MCP adapter
 
-Planned tool families: connection status, assigned tabs, page snapshot, bounded batch execution, handoff status, explicit resume and cancellation. Names and schemas are not frozen.
+`main.mjs` uses the official MCP SDK and stdio transport. Seven tools cover status, pairing, snapshot, bounded DOM actions, same-origin navigation, request results and revocation. Resume remains a human-only extension popup action.
 
-This component is not implemented and cannot be installed yet. Use the official MCP SDK when implementation starts and pin the tested SDK/protocol compatibility. MCP calls should return `needs_user` promptly; long human verification must not depend on an open tool call. Cross-call state uses explicit server-minted handles.
+The adapter delegates to the JS SDK and starts the local broker on demand. `pnpm build` produces the self-contained Node entry used by the plugin. `node scripts/call-tool.mjs safari_status` is a diagnostic client using the real MCP protocol.
 
-Route browser behavior through the SDK, rather than maintaining a second page automation implementation. Page content is untrusted data and must never grant permission or trigger arbitrary local execution.
+Tool page output is untrusted data. Unknown side effects must be reconciled, not automatically replayed. See [installation and tool list](../../README.md).

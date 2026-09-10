@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 errors = []
 documents = {}
 for path in ROOT.rglob('*.json'):
-    if '.git' in path.parts:
+    if any(p in path.parts for p in ('.git','node_modules','work','runtime')):
         continue
     try:
         documents[path.relative_to(ROOT).as_posix()] = json.loads(path.read_text())
@@ -18,8 +18,8 @@ for path in ROOT.rglob('*.json'):
 manifest = documents.get('plugins/at-safari/.codex-plugin/plugin.json', {})
 if manifest.get('name') != 'at-safari':
     errors.append('Plugin name must match its enclosing folder: at-safari')
-if 'mcpServers' in manifest or 'apps' in manifest:
-    errors.append('Scaffold must not advertise unimplemented services')
+if manifest.get('mcpServers') != './.mcp.json':
+    errors.append('Plugin must expose its companion MCP config')
 
 hello = documents.get('packages/protocol/fixtures/hello.json', {})
 result = documents.get('packages/protocol/fixtures/needs-user.json', {})
@@ -32,7 +32,7 @@ if payload.get('origin') != 'https://example.org':
     errors.append('Illustrative fixture must use the synthetic example.org origin')
 
 for path in ROOT.rglob('*.md'):
-    if '.git' in path.parts:
+    if any(p in path.parts for p in ('.git','node_modules','work','runtime')):
         continue
     for target in re.findall(r'\[[^\]]*\]\(([^\s)]+)\)', path.read_text()):
         parsed = urlsplit(target)
@@ -45,4 +45,4 @@ for path in ROOT.rglob('*.md'):
 if errors:
     raise SystemExit('\n'.join(errors))
 print(f'PASS: {len(documents)} JSON files, manifest, illustrative fixtures and local Markdown links')
-print('Scope: repository scaffold only; Safari execution and protocol conformance are untested.')
+print('Scope: static repository checks only; run the runtime suite and separate Safari integration checks.')

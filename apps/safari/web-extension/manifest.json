@@ -1,0 +1,11 @@
+{
+  "manifest_version": 2,
+  "name": "at-safari",
+  "version": "0.1.0",
+  "description": "Explicitly assign Safari tabs to a local agent. Pause, inspect and resume from this extension.",
+  "permissions": ["nativeMessaging", "tabs", "storage", "activeTab"],
+  "optional_permissions": ["http://*/*", "https://*/*"],
+  "background": {"scripts": ["background.js"], "persistent": true},
+  "browser_action": {"default_title": "at-safari", "default_popup": "popup.html"},
+  "content_security_policy": "script-src 'self'; object-src 'none'"
+}

@@ -23,3 +23,6 @@ work/
 artifacts/
 browser-profiles/
 private-fixtures/
+.at-safari/
+plugins/at-safari/runtime/
+plugins/at-safari/THIRD_PARTY_NOTICES.txt

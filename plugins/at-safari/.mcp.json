@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "at-safari": {
+      "command": "/bin/bash",
+      "args": ["${CODEX_PLUGIN_ROOT}/scripts/run-mcp.sh"]
+    }
+  }
+}

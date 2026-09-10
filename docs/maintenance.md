@@ -6,11 +6,11 @@
 
 | 组件 | 建议技术 | 维护内容 | 交付与版本 |
 | --- | --- | --- | --- |
-| Safari Web Extension | TypeScript / WebExtension | 站点权限、标签页路由、DOM 读取与操作、人工接管、Safari 兼容性 | 随 macOS app 一起发布 |
+| Safari Web Extension | JavaScript / WebExtension | 站点权限、标签页路由、DOM 读取与操作、人工接管、Safari 兼容性 | 随 macOS app 一起发布 |
 | Swift 容器和 native handler | Swift / Xcode | 原生消息、进程生命周期、本地配对、签名和公证 | 与扩展使用同一 app 版本 |
-| 本地 bridge | 初期评估 TypeScript + Swift IPC | 会话、租约、队列、断线恢复、请求去重 | JS 侧初期与 SDK/MCP 同版本 |
-| SDK | TypeScript | 标签页对象、定位器、批次、等待、错误映射 | 初期与 MCP 同版本，后续可独立 |
-| MCP adapter | TypeScript + 官方 SDK（实现时固定版本） | 工具 schema、能力声明、结构化结果、客户端兼容 | 初期随 JS tooling 发布 |
+| 本地 bridge | Node.js + Swift loopback HTTP | 会话、租约、队列、断线恢复、请求去重 | JS 侧初期与 SDK/MCP 同版本 |
+| SDK | JavaScript | 标签页对象、定位器、批次、等待、错误映射 | 初期与 MCP 同版本，后续可独立 |
+| MCP adapter | JavaScript + 官方 SDK（lockfile 固定） | 工具 schema、能力声明、结构化结果、客户端兼容 | 初期随 JS tooling 发布 |
 | 内部协议 | 规范、schema、生成类型 | 版本协商、兼容矩阵、错误和状态 | 独立协议版本 |
 | Codex plugin wrapper | manifest / skills | 安装入口、用法和能力说明 | 跟随已验证 MCP 版本 |
 
@@ -18,7 +18,7 @@
 
 ## 协议兼容
 
-连接时交换扩展、app、bridge 版本、支持的内部协议版本列表和能力列表，选择明确的共同版本。没有交集时拒绝连接，并告诉用户更新哪一端。
+当前 alpha 使用内部协议 `0.1` 精确匹配，并由状态工具报告能力。未来连接时交换扩展、app、bridge 版本、支持的内部协议版本列表和能力列表，选择明确的共同版本。没有交集时拒绝连接，并告诉用户更新哪一端。
 
 不要仅凭主版本号或“只差一个版本”假定兼容。每个发布组合都在兼容矩阵中列出。协议升级采用两阶段：先部署能同时理解旧、新消息的接收端，再部署发新消息的发送端；废弃旧协议要有明确的截止版本。
 
@@ -32,7 +32,7 @@ MCP 的协议协商由 MCP 层单独处理。浏览器句柄、暂停状态和�
 4. 人工体验验收：用户在 A 输入、agent 在 B 工作，记录输入损坏、标签页切换和前台激活次数；计数目标为零，不能只测请求成功。
 5. 挑战测试：自有 fixture 与官方测试密钥用于 CI；真实站点只做用户授权的人工验证。记录每次任务的挑战次数、人工耗时、恢复成功率和重复提交次数，不把测试密钥通过率当作生产结果。
 
-当前 CI 只验证仓库骨架。上述运行时测试尚未实现，不能把绿色 CI 解释为浏览器可用。
+当前 CI 验证仓库、JS 语法、bundle 构建、broker/DOM/MCP 测试。Safari 实机测试和签名分别记录，不能把绿色 Linux CI 解释为所有网站可用。
 
 ## 发布流程
 

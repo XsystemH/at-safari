@@ -1,7 +1,9 @@
 # Safari app and extension
 
-Planned: an Xcode macOS app containing a Safari Web Extension and native message handler. The extension owns tab assignment, site access, DOM execution and user handoff; the Swift layer owns the app/extension communication boundary and local bridge integration.
+`web-extension/` contains the macOS Manifest V2 persistent background script, popup controls and bounded DOM backend. `native/SafariWebExtensionHandler.swift` receives native messages and forwards only pairing, polling and results to the loopback broker. Native credentials stay in the extension's sandboxed defaults, outside JavaScript.
 
-No Xcode project or runnable extension is present yet. Create the smallest native messaging and background-tab spike in P0 before committing to a production transport.
+Build with `python3 scripts/build-safari.py` from the repository root. The script generates an Xcode project with Apple's converter, syncs source resources, enables outgoing local networking and creates an ad-hoc development app. Generated Xcode files stay under ignored `work/`.
 
-Keep native handler and Web Extension versions aligned in one app release. Do not add blanket website access or automatically install/enable the extension as part of a repository check. See [architecture](../../docs/architecture.md) and [maintenance](../../docs/maintenance.md).
+Users enable the extension and grant each site's access. Assignment and resume are popup-only operations. Selected task tabs, changed origins and trusted user input pause writes. Read snapshots remain available while paused. The alpha handles the top frame only and uses synthetic DOM input, not native input.
+
+App, handler and Web Extension ship together. See [installation](../../README.md) and [validation](../../docs/validation.md).

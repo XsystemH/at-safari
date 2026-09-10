@@ -1,7 +1,7 @@
-# Local bridge / session coordinator
+# Local broker
 
-Planned: authenticated local connection, protocol negotiation, assigned-tab leases, bounded queues, cancellation, result bookkeeping and reconnect reconciliation.
+`server.mjs` implements an authenticated HTTP broker on loopback `127.0.0.1:19848`. Swift polls it through native messaging; webpage origins are rejected. Five-minute one-use pairing creates a separate native credential. The administrator credential lives in a restricted local file.
 
-This component is not implemented. The Swift-to-JS transport is an explicit P0 research gate. Browser numeric IDs are not authorization; validate session, profile, document and lease before every mutation. A disconnected caller must not leave an unlimited task queue running.
+Only explicitly assigned tabs are routed. Each tab permits one outstanding request. Identical request IDs deduplicate for ten minutes in memory; conflicting arguments are rejected. A dispatched timeout remains `unknown`, with any late result attached separately. Restart loses request history and is not a safe basis for replaying submissions.
 
-Keep DOM behavior in the Safari backend. See [protocol](../protocol/README.md).
+`demo.mjs` is a synthetic local test page, served at `/demo`. It does not call the broker API.
