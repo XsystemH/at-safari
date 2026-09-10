@@ -1,0 +1,17 @@
+{
+  "name": "at-safari",
+  "version": "0.1.0-dev",
+  "description": "Design-stage packaging for at-safari. No browser tools are implemented yet.",
+  "author": {
+    "name": "at-safari contributors"
+  },
+  "interface": {
+    "displayName": "at-safari",
+    "shortDescription": "Safari agent bridge — design scaffold.",
+    "longDescription": "Independent Safari agent bridge design. This metadata scaffold does not expose working tools.",
+    "developerName": "at-safari contributors",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Explain the current at-safari design and implementation status."
+  }
+}

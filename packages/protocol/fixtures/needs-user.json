@@ -1,0 +1,18 @@
+{
+  "protocolVersion": "0.1",
+  "requestId": "fixture-request-002",
+  "sessionId": "fixture-session-001",
+  "type": "execution.result",
+  "payload": {
+    "status": "needs_user",
+    "reason": "challenge",
+    "handoffId": "fixture-handoff-001",
+    "tabHandle": "fixture-tab-001",
+    "origin": "https://example.org",
+    "steps": [
+      {"stepId": "fill-search", "status": "completed"},
+      {"stepId": "submit-search", "status": "not_started"}
+    ],
+    "nextAction": "Complete verification in the assigned Safari tab, then explicitly resume."
+  }
+}

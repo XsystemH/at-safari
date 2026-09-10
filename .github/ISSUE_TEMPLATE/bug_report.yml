@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a reproducible at-safari issue without private browser data.
+body:
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions and component
+      description: Include macOS, Safari, app/extension and MCP/bridge versions when available.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and expected behavior
+      description: Use a public or synthetic page. Do not include cookies, tokens, private URLs or screenshots.
+    validations:
+      required: true
+  - type: textarea
+    id: interaction
+    attributes:
+      label: Browsing interference or human handoff
+      description: Did Safari switch tabs, interrupt typing, repeat a submission or fail to resume?
